@@ -26,8 +26,10 @@ pipeline {
         stage('Rebuild & Restart App') {
             steps {
                 sh '''
-                docker-compose down
-                docker-compose up --build -d
+                docker rm -f mysql-container || true
+				docker rm -f springboot-staff-app || true
+				docker-compose down --remove-orphans
+				docker-compose up --build -d
                 '''
             }
         }

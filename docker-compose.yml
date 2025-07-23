@@ -1,41 +1,29 @@
-pipeline {
-    agent {
-        docker {
-            image 'docker:24.0.2-dind'
-            args '-u root --privileged -v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+version: '3.8'
 
-    environment {
-        COMPOSE_PROJECT_NAME = 'springboot-mysql-app'
-    }
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: yourpassword
+      MYSQL_DATABASE: testmysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
 
-    stages {
-        stage('Install Tools') {
-            steps {
-                sh '''
-                apk add --no-cache openjdk17 maven docker-compose
-                '''
-            }
-        }
+  app:
+    build: .
+    container_name: springboot-staff-app
+    depends_on:
+      - mysql
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/testmysql
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: yourpassword
 
-        stage('Build JAR') {
-            steps {
-                sh 'mvn clean package -DskipTests'
-            }
-        }
-
-        stage('Start App with Docker Compose') {
-            steps {
-                sh 'docker-compose down || true'
-                sh 'docker-compose up --build -d'
-            }
-        }
-    }
-
-    post {
-        always {
-            echo "App and MySQL containers deployed with docker-compose."
-        }
-    }
-}
+volumes:
+  mysql_data:

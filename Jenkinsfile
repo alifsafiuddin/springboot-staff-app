@@ -7,12 +7,12 @@ pipeline {
     }
 
     environment {
-        IMAGE_NAME = 'testmysql-app'
-        CONTAINER_NAME = 'testmysql-container'
+        IMAGE_NAME = 'springboot-staff-app'
+        CONTAINER_NAME = 'springboot-staff-container'
     }
 
     stages {
-        stage('Install Java & Maven, then Build WAR') {
+        stage('Install Java & Maven, then Build JAR') {
             steps {
                 sh '''
                 apk add --no-cache openjdk17 maven
@@ -27,7 +27,7 @@ pipeline {
             }
         }
 
-        stage('Remove Old Container if Exists') {
+        stage('Stop & Remove Existing Container') {
             steps {
                 sh '''
                 docker rm -f $CONTAINER_NAME || true
@@ -35,7 +35,7 @@ pipeline {
             }
         }
 
-        stage('Run Docker Container') {
+        stage('Run Container') {
             steps {
                 sh '''
                 docker run -d -p 8080:8080 --name $CONTAINER_NAME $IMAGE_NAME
